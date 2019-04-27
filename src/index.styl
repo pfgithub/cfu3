@@ -1,0 +1,134 @@
+cfu-gradient-1 = #4DD6D8
+cfu-gradient-2 = #0097BF
+text-color = #000000
+light-text-color = rgba(0,0,0,0.6)
+
+:root{
+	--gradient-start: #000;
+	--gradient-end: #000;
+}
+
+#scrollcolor
+	position fixed
+	top -100px
+	left -100px
+	bottom -100px
+	right -100px
+	background linear-gradient(to bottom right, cfu-gradient-1, cfu-gradient-2)
+	background-size cover
+	z-index: -999999;
+
+html
+	height 100%
+body
+	padding 0
+	margin 0
+	height 100%
+	overflow-y: scroll;
+#root
+	display grid
+	grid-template-columns 1fr 320px 1fr
+	
+ellipsis()
+	text-wrap none
+	white-space nowrap
+	overflow hidden
+	text-overflow ellipsis
+italic()
+	font-style italic
+lightshadow()
+	box-shadow 2px 2px 20px rgba(0,0,0,0.3);
+
+.button
+	display inline
+	background linear-gradient(to bottom right, var(--gradient-start), var(--gradient-end))
+	border-radius 10px
+	padding-left 10px
+	padding-right 10px
+	padding-top 5px
+	padding-bottom 5px
+	height min-content
+	color white
+	text-decoration none
+	font-family sans-serif
+	font-weight bold
+	lightshadow();
+	& > .text
+		padding 0
+
+.content
+	grid-column-start 2
+
+@keyframes scalein
+	from
+		transform scaleY(0)
+	to
+		transform scaleY(1)
+
+.shortcut
+	margin 10px
+	background-color white
+	padding 10px
+	border-radius 10px
+	box-shadow 2px 2px 20px rgba(0,0,0,0.4)
+	overflow hidden
+	font-family sans-serif
+	position relative
+	& > .progress
+		position absolute
+		top 0
+		left: 0
+		bottom 0
+		background linear-gradient(to right, var(--gradient-start), var(--gradient-end))
+		transition 100ms width, 0.1s opacity, 0.1s z-index
+		&.loaded
+			opacity 0
+			z-index: -99999;
+	& > .fullcontent
+		padding-top 10px
+		display none
+		transform:scaleY(0);
+		transform-origin: top center;
+		transition 0.1s transform
+		&.open
+			animation: 0.2s scalein
+			animation-fill-mode: forwards;
+			display block
+		& > .fulldescription
+			white-space pre-wrap
+			word-wrap: break-word;
+	& > .short
+		display grid
+		grid-template-columns max-content 1fr max-content
+		gap 10px
+		& > .icon
+			width: 40px;
+			height: 40px;
+			border-radius 10px
+			lightshadow();
+		& > .details
+			display grid
+			grid-template-rows 0 max-content 1fr
+			max-height 40px;
+			transition 0.1s grid-template-rows
+			&.open
+				grid-template-rows 1fr max-content 1fr
+			& p
+				ellipsis()
+				padding 0
+				margin 0
+			& > .description
+				ellipsis()
+				italic()
+				color light-text-color
+				font-family serif
+				transform:scaleY(1);
+				transform-origin: bottom center;
+				transition 0.1s transform
+				&.open
+					transform:scaleY(0);
+		& > .buttons
+			display grid
+			max-height 40px;
+			grid-template-rows 1fr min-content 1fr
+	

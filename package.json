@@ -1,36 +1,44 @@
 {
-  "name": "cfu3",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@types/jest": "24.0.11",
-    "@types/node": "11.13.8",
-    "@types/react": "16.8.14",
-    "@types/react-dom": "16.8.4",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-scripts": "3.0.0",
-    "typescript": "3.4.5"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+	"name": "cfu3",
+	"version": "0.1.0",
+	"private": true,
+	"dependencies": {
+		"@types/jest": "24.0.11",
+		"@types/node": "11.13.8",
+		"@types/react": "16.8.14",
+		"@types/react-dom": "16.8.4",
+		"concurrently": "^4.1.0",
+		"react": "^16.8.6",
+		"react-dom": "^16.8.6",
+		"react-scripts": "3.0.0",
+		"typescript": "3.4.5"
+	},
+	"scripts": {
+		"watch-stylus": "stylus -c -w src/index.styl",
+		"watch-prettier": "onchange src/***.{css,tsx,ts,json} .prettierrc .eslintrc.js -- yarn run prettier --write '{{changed}}' package.json",
+		"start": "react-scripts start",
+		"build": "react-scripts build",
+		"test": "react-scripts test",
+		"eject": "react-scripts eject"
+	},
+	"eslintConfig": {
+		"extends": "react-app"
+	},
+	"browserslist": {
+		"production": [
+			">0.2%",
+			"not dead",
+			"not op_mini all"
+		],
+		"development": [
+			"last 1 chrome version",
+			"last 1 firefox version",
+			"last 1 safari version"
+		]
+	},
+	"devDependencies": {
+		"onchange": "^5.2.0",
+		"prettier": "^1.17.0",
+		"stylus": "^0.54.5"
+	}
 }
