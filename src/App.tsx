@@ -9,6 +9,7 @@ declare module "csstype" {
 		// Add a CSS Custom Property
 		"--gradient-start"?: string;
 		"--gradient-end"?: string;
+		"--progress"?: string;
 	}
 }
 
@@ -162,6 +163,10 @@ function semverCompare(
 	return "NoChanges";
 }
 
+// 1.1.1 ↘ 1.0
+// 1.9 → 2.2.1
+// 1.5 = 1.5
+
 // function downloadData(id: number) {
 // 	return new Promise((resolve, reject) => {
 // 		const xhttp = new XMLHttpRequest();
@@ -203,11 +208,17 @@ class Shortcut extends Component<
 		downloadURL?: string;
 		percentComplete: number;
 		error: boolean;
+		loading: boolean;
 	}
 > {
 	constructor(props: Readonly<ShortcutProps>) {
 		super(props);
-		this.state = { open: false, error: false, percentComplete: 0 };
+		this.state = {
+			open: false,
+			error: false,
+			percentComplete: 0,
+			loading: true
+		};
 		this.findColor();
 		this.downloadData();
 	}
@@ -243,6 +254,7 @@ class Shortcut extends Component<
 				description: `Error while checking for updates: ${
 					rhdata.message
 				}`,
+				loading: false,
 				error: true
 			});
 			return;
@@ -250,13 +262,14 @@ class Shortcut extends Component<
 		this.setState({
 			publishedVersion: rhdata.Version,
 			description: rhdata.Notes,
-			downloadURL: `https://routinehub.co/download/${rhdata.id}`
+			downloadURL: `https://routinehub.co/download/${rhdata.id}`,
+			loading: false
 		});
 	}
 	render() {
 		return (
 			<div
-				className="shortcut"
+				className={`shortcut ${this.state.loading ? "loading" : ""}`}
 				id="sc1"
 				onClick={() => {
 					this.setState({ open: !this.state.open });
@@ -266,15 +279,6 @@ class Shortcut extends Component<
 					"--gradient-end": this.state.gradientEndColor
 				}}
 			>
-				<div
-					className={`progress ${
-						this.state.percentComplete === 1 ? "loaded" : ""
-					}`}
-					style={{
-						width: `${100 -
-							+this.state.percentComplete.toFixed(2) * 100}%`
-					}}
-				/>
 				<div className="short">
 					<img
 						className="icon"
@@ -323,6 +327,29 @@ class Shortcut extends Component<
 						{this.state.description || "..."}
 					</p>
 				</div>
+				<div
+					className="progressoverlay"
+					onClick={e => e.preventDefault()}
+				>
+					<div />
+					<div>Loading...</div>
+					<div
+						className={`progress ${
+							this.state.percentComplete === 1 ? "loaded" : ""
+						}`}
+						style={{
+							"--progress": `${+this.state.percentComplete.toFixed(
+								2
+							) * 100}%`
+						}}
+						role="progressbar"
+						aria-valueNow={
+							+this.state.percentComplete.toFixed(2) * 100
+						}
+						aria-valueMin={0}
+						aria-valueMax={100}
+					/>
+				</div>
 			</div>
 		);
 	}
@@ -332,6 +359,8 @@ class App extends Component<{}, {}> {
 	render() {
 		return (
 			<div className="content">
+				<h1>Loading...</h1>
+				<h1>Need Updating</h1>
 				<Shortcut
 					img={img}
 					name={"ALL THE GIFs!"}
@@ -342,10 +371,11 @@ class App extends Component<{}, {}> {
 				<Shortcut
 					img={cfu}
 					name={"Check For Updates"}
-					localVersion={"1.2.2"}
+					localVersion={"3.0"}
 					downloadURL={"https://routinehub.co/download/7537"}
 					routinehubID={793}
 				/>
+				<h1>Up To Date</h1>
 				<Shortcut
 					img={icontrivia}
 					name={"Trivia"}

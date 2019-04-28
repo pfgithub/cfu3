@@ -50,6 +50,11 @@ body {
 .content {
 	grid-column-start: 2;
 }
+h1 {
+	font-family: sans-serif;
+	color: #fff;
+	text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.8);
+}
 .shortcut {
 	margin: 10px;
 	background-color: #fff;
@@ -60,21 +65,44 @@ body {
 	font-family: sans-serif;
 	position: relative;
 }
-.shortcut > .progress {
+.shortcut.loading {
+	opacity: 1;
+}
+.shortcut > .progressoverlay {
 	position: absolute;
 	top: 0;
 	left: 0;
+	right: 0;
 	bottom: 0;
+	border-radius: 10px;
+	display: grid;
+	grid-template-rows: 1fr max-content max-content 1fr;
+}
+@supports (backdrop-filter: blur(3px)) {
+	.shortcut > .progressoverlay {
+		backdrop-filter: blur(3px);
+		background-color: rgba(0, 151, 191, 0.2);
+	}
+}
+@supports not (backdrop-filter: blur(3px)) {
+	.shortcut > .progressoverlay {
+		background-color: rgba(0, 151, 191, 0.6);
+	}
+}
+.shortcut > .progressoverlay > .progress {
+	opacity: 1;
 	background: linear-gradient(
 		to right,
-		var(--gradient-start),
-		var(--gradient-end)
+		var(--gradient-start) 0%,
+		var(--gradient-end) var(--progress),
+		rgba(0, 0, 0, 0) var(--progress)
 	);
+	height: 20px;
 	transition: 100ms width, 0.1s opacity, 0.1s z-index;
+	border-radius: 10px;
 }
-.shortcut > .progress.loaded {
-	opacity: 0;
-	z-index: -99999;
+.shortcut > .progressoverlay > .progress.loaded {
+	opacity: 1;
 }
 .shortcut > .fullcontent {
 	padding-top: 10px;
