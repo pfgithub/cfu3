@@ -74,7 +74,7 @@ type RoutineHubShortcutData =
 
 const timeout = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-async function downloadData(
+async function downloadDataFake(
 	id: number,
 	onProgress: (percent: number) => void
 ): Promise<RoutineHubShortcutData> {
@@ -82,11 +82,6 @@ async function downloadData(
 	const start = new Date().getTime();
 	const ticker = setInterval(() => {
 		onProgress((new Date().getTime() - start) / time);
-		console.log(
-			new Date().getTime() - start,
-			(new Date().getTime() - start) / time,
-			time
-		);
 	}, 100);
 	await timeout(time);
 	clearInterval(ticker);
@@ -138,10 +133,40 @@ async function downloadData(
 	}
 }
 
-function semverCompare(
-	a: string,
-	b: string
-): "NoChanges" | "UpdateAvailable" | "RollbackAvailable" {
+function downloadData(
+	id: number,
+	onProgress: (percent: number) => void
+): Promise<RoutineHubShortcutData> {
+	return new Promise((resolve, reject) => {
+		const xhttp = new XMLHttpRequest();
+		xhttp.onprogress = e => {
+			console.log("onprogress", e);
+			if (e.lengthComputable) {
+				onProgress(e.loaded / e.total);
+			} else {
+				onProgress(0.1);
+			}
+		};
+		//eslint-disable-next-line func-names
+		xhttp.onreadystatechange = function() {
+			if (this.readyState === 4) {
+				onProgress(1);
+				// Typical action to be performed when the document is ready:
+				console.log("response:", xhttp.response);
+				resolve(JSON.parse(xhttp.response));
+			}
+		};
+		xhttp.open(
+			"GET",
+			`https://routinehub.co/api/v1/shortcuts/${id}/versions/latest`,
+			true
+		);
+		xhttp.send();
+	});
+}
+
+type UpdateStatus = "NoChanges" | "UpdateAvailable" | "RollbackAvailable";
+function semverCompare(a: string, b: string): UpdateStatus {
 	const pa = a.split(".");
 	const pb = b.split(".");
 	for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
@@ -167,25 +192,6 @@ function semverCompare(
 // 1.9 → 2.2.1
 // 1.5 = 1.5
 
-// function downloadData(id: number) {
-// 	return new Promise((resolve, reject) => {
-// 		const xhttp = new XMLHttpRequest();
-// 		//eslint-disable-next-line func-names
-// 		xhttp.onreadystatechange = function() {
-// 			if (this.readyState === 4) {
-// 				// Typical action to be performed when the document is ready:
-// 				resolve(xhttp.response);
-// 			}
-// 		};
-// 		xhttp.open(
-// 			"GET",
-// 			`https://routinehub.co/api/v1/shortcuts/${id}/versions/latest`,
-// 			true
-// 		);
-// 		xhttp.send();
-// 	});
-// }
-
 function imgDataToColorCode(imgData: Uint8ClampedArray): string {
 	return `rgba(${imgData[0]},${imgData[1]},${imgData[2]},${imgData[3]})`;
 }
@@ -206,6 +212,7 @@ class Shortcut extends Component<
 		publishedVersion?: string;
 		description?: string;
 		downloadURL?: string;
+		updateStatus?: UpdateStatus;
 		percentComplete: number;
 		error: boolean;
 		loading: boolean;
@@ -263,6 +270,10 @@ class Shortcut extends Component<
 			publishedVersion: rhdata.Version,
 			description: rhdata.Notes,
 			downloadURL: `https://routinehub.co/download/${rhdata.id}`,
+			updateStatus: semverCompare(
+				this.props.localVersion,
+				rhdata.Version
+			),
 			loading: false
 		});
 	}
@@ -306,7 +317,7 @@ class Shortcut extends Component<
 							}
 							onClick={e => e.stopPropagation()}
 							target="_blank"
-							rel="noopener"
+							rel="noopener noreferrer"
 						>
 							<div className="text">
 								{this.state.error
@@ -327,29 +338,31 @@ class Shortcut extends Component<
 						{this.state.description || "..."}
 					</p>
 				</div>
-				<div
-					className="progressoverlay"
-					onClick={e => e.preventDefault()}
-				>
-					<div />
-					<div>Loading...</div>
+				{this.state.loading ? (
 					<div
-						className={`progress ${
-							this.state.percentComplete === 1 ? "loaded" : ""
-						}`}
-						style={{
-							"--progress": `${+this.state.percentComplete.toFixed(
-								2
-							) * 100}%`
-						}}
-						role="progressbar"
-						aria-valueNow={
-							+this.state.percentComplete.toFixed(2) * 100
-						}
-						aria-valueMin={0}
-						aria-valueMax={100}
-					/>
-				</div>
+						className="progressoverlay"
+						onClick={e => e.stopPropagation()}
+					>
+						<div />
+						<div>Loading...</div>
+						<div
+							className={`progress ${
+								this.state.percentComplete === 1 ? "loaded" : ""
+							}`}
+							style={{
+								"--progress": `${+this.state.percentComplete.toFixed(
+									2
+								) * 100}%`
+							}}
+							role="progressbar"
+							aria-valueNow={
+								+this.state.percentComplete.toFixed(2) * 100
+							}
+							aria-valueMin={0}
+							aria-valueMax={100}
+						/>
+					</div>
+				) : null}
 			</div>
 		);
 	}
