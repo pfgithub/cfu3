@@ -147,13 +147,22 @@ function downloadData(
 				onProgress(0.1);
 			}
 		};
-		//eslint-disable-next-line func-names
-		xhttp.onreadystatechange = function() {
-			if (this.readyState === 4) {
+		xhttp.onerror = e => {
+			console.log(e);
+			resolve({
+				result: "error",
+				message:
+					"An error occured. This may be because you do not have internet access, or because the RoutineHub servers were unreachable, or because Harley Hicks has not yet enabled CORS."
+			});
+		};
+		xhttp.onreadystatechange = () => {
+			if (xhttp.readyState === 4) {
 				onProgress(1);
 				// Typical action to be performed when the document is ready:
-				console.log("response:", xhttp.response);
-				resolve(JSON.parse(xhttp.response));
+				console.log("response:", xhttp);
+				if (xhttp.response) {
+					resolve(JSON.parse(xhttp.response));
+				}
 			}
 		};
 		xhttp.open(
