@@ -28,7 +28,7 @@ body
 #root
 	display grid
 	grid-template-columns 1fr 320px 1fr
-	
+
 ellipsis()
 	text-wrap none
 	white-space nowrap
@@ -89,10 +89,12 @@ h1
 		bottom: 0
 		border-radius 10px
 		@supports (backdrop-filter: blur(3px))
-			backdrop-filter blur(3px);
-			background-color var(--gradient-start)
+			&
+				backdrop-filter blur(3px);
+				background-color var(--gradient-start)
 		@supports not (backdrop-filter: blur(3px))
-			background-color var(--gradient-start)
+			&
+				background-color var(--gradient-start)
 		display grid
 		grid-template-rows: 1fr max-content max-content 1fr
 		& > .progresstext
@@ -165,4 +167,3 @@ h1
 			display grid
 			max-height 40px;
 			grid-template-rows 1fr min-content 1fr
-	

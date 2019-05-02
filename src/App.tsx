@@ -74,66 +74,6 @@ type RoutineHubShortcutData =
 
 const timeout = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-async function downloadDataFake(
-	id: number,
-	onProgress: (percent: number) => void
-): Promise<RoutineHubShortcutData> {
-	const time = Math.random() * 10000;
-	const start = new Date().getTime();
-	const ticker = setInterval(() => {
-		onProgress((new Date().getTime() - start) / time);
-	}, 100);
-	await timeout(time);
-	clearInterval(ticker);
-	onProgress(1);
-	switch (id) {
-		case 793:
-			return {
-				result: "success",
-				id: 7537,
-				Version: "2.0",
-				URL:
-					"https://www.icloud.com/shortcuts/1366d595bb6d4348a95cad04e0116ef9",
-				Notes:
-					"New in version 2.0:\r\n+ Check For Updates was completelly rewritten from the ground up in ScPL!\r\n+ CFU now supports rollbacks. If the installed version is less than the latest version, you can do a rollback.\r\n+ There is a new fancy UI for updating shortcuts.\r\n+ A new integration method is available that is one less action and 100x less error-prone than the old one. Don't worry, shortcuts made for 1.0 will keep updating.\r\n+ You now get proper errors when your shortcut was integrated wrong, telling you the error and what you need to fix.\r\n+ CFU now supports capital letters in dictionaries!\r\n+ CFU now uses a Javascript version compare algorithm.",
-				Release: "April 26, 2019"
-			};
-		case 1001:
-			return {
-				result: "success",
-				id: 3596,
-				Version: "1.2.3",
-				URL:
-					"https://www.icloud.com/shortcuts/61cf542ec5eb4e4786522e1af68ee8ed",
-				Notes:
-					"New in version 1.2.3:\r\n+ Question is now shown on the results screen",
-				Release: "December 26, 2018"
-			};
-		case 2277:
-			return {
-				result: "success",
-				id: 7560,
-				Version: "4.5",
-				URL:
-					"https://www.icloud.com/shortcuts/379b4c3f52724548a6f49b2b5bf8bb5f",
-				Notes:
-					"- Removed 24 unnecessary \u201cSet Dictionary Value: GIF\u201d actions and added this code in the dictionary action above where all these used to be. In return, this cleans up code by 24 actions.\r\n\r\n- Removed 14 unnecessary \u2018Change Case\u2019 actions.\r\n\r\n- Improvement made for all Check for update support in the shortcut.\r\n\r\n- Total # of actions: 1,930",
-				Release: "April 27, 2019"
-			};
-		case 816:
-			return {
-				result: "error",
-				message: "Invalid shortcut. This shortcut is not published."
-			};
-		default:
-			return {
-				result: "error",
-				message: "Invalid shortcut. No shortcut exists with this ID."
-			};
-	}
-}
-downloadDataFake(123231243, () => {});
-
 function downloadData(
 	id: number,
 	onProgress: (percent: number) => void
