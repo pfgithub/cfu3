@@ -13,6 +13,7 @@
 		"react-scripts": "3.0.0",
 		"typescript": "3.4.5"
 	},
+	"homepage": "https://pfg.pw/cfu3",
 	"scripts": {
 		"watch": "concurrently \"yarn run watch-stylus\" \"yarn run watch-prettier\"",
 		"watch-stylus": "stylus -c -w src/index.styl",
