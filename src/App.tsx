@@ -159,10 +159,23 @@ type ShortcutCategory =
 	| "Loading"
 	| "Error";
 
+let compareResultToCategory: { [key in UpdateStatus]: ShortcutCategory } = {
+	NoChanges: "UpToDate",
+	RollbackAvailable: "NeedRollback",
+	UpdateAvailable: "NeedUpdating"
+};
+
+let categoryNames: { [key in ShortcutCategory]: string } = {
+	NeedUpdating: "Update Available",
+	UpToDate: "Up To Date",
+	NeedRollback: "Rollback Required",
+	Loading: "Loading...",
+	Error: "Error"
+};
+
 type ShortcutProps = {
 	img: string;
 	name: string;
-	downloadURL: string;
 	routinehubID: number;
 	localVersion: string;
 	categorize: (category: ShortcutCategory) => void;
@@ -190,9 +203,12 @@ class Shortcut extends Component<
 			percentComplete: 0,
 			loading: true
 		};
+	}
+	componentDidMount() {
 		this.findColor();
 		this.downloadData();
 	}
+
 	findColor() {
 		const imgwidth = 8;
 		const imgheight = 8;
@@ -230,25 +246,36 @@ class Shortcut extends Component<
 			this.setState({ percentComplete: percent });
 		});
 		if (rhdata.result === "error") {
-			this.setState({
-				description: `Error while checking for updates: ${
-					rhdata.message
-				}`,
-				loading: false,
-				error: true
-			});
+			this.setState(
+				{
+					description: `Error while checking for updates: ${
+						rhdata.message
+					}`,
+					loading: false,
+					error: true
+				},
+				() => {
+					this.props.categorize("Error");
+				}
+			);
 			return;
 		}
-		this.setState({
-			publishedVersion: rhdata.Version,
-			description: rhdata.Notes,
-			downloadURL: `https://routinehub.co/download/${rhdata.id}`,
-			updateStatus: semverCompare(
-				this.props.localVersion,
-				rhdata.Version
-			),
-			loading: false
-		});
+		let compareResult = semverCompare(
+			this.props.localVersion,
+			rhdata.Version
+		);
+		this.setState(
+			{
+				publishedVersion: rhdata.Version,
+				description: rhdata.Notes,
+				downloadURL: `https://routinehub.co/download/${rhdata.id}`,
+				updateStatus: compareResult,
+				loading: false
+			},
+			() => {
+				this.props.categorize(compareResultToCategory[compareResult]);
+			}
+		);
 	}
 	render() {
 		return (
@@ -364,6 +391,14 @@ interface ShortcutDataRoutineHub extends ShortcutDataBase {
 
 type ShortcutData = ShortcutDataRoutineHub;
 
+const categoryOrder: ShortcutCategory[] = [
+	"Loading",
+	"Error",
+	"NeedRollback",
+	"NeedUpdating",
+	"UpToDate"
+];
+
 class App extends Component<{}, { data: ShortcutData[] }> {
 	constructor(props: Readonly<{}>) {
 		super(props);
@@ -408,53 +443,46 @@ class App extends Component<{}, { data: ShortcutData[] }> {
 			]
 		};
 	}
-	categorize(category: ShortcutCategory) {}
+	categorize(dat: ShortcutData, category: ShortcutCategory) {
+		dat.category = category;
+		this.setState({ data: this.state.data });
+	}
 	render() {
+		const shortcutsByCategory: {
+			[key in ShortcutCategory]?: ShortcutData[]
+		} = {};
+		this.state.data.forEach(shortcut => {
+			if (!shortcutsByCategory[shortcut.category]) {
+				shortcutsByCategory[shortcut.category] = [];
+			}
+			// @ts-ignore
+			shortcutsByCategory[shortcut.category].push(shortcut);
+		});
 		return (
 			<div className="content">
-				<h1>Loading...</h1>
-				<h1>Need Updating</h1>
-				<Shortcut
-					img={img}
-					name={"ALL THE GIFs!"}
-					localVersion={"1.1.2"}
-					downloadURL={"https://routinehub.co/download/7560"}
-					routinehubID={2277}
-					categorize={(category: ShortcutCategory) =>
-						this.categorize(category)
+				{categoryOrder.map(category => {
+					let scbc = shortcutsByCategory[category];
+					if (scbc) {
+						return (
+							<div key={category}>
+								<h1>{categoryNames[category]}</h1>
+								{scbc.map(dat => (
+									<Shortcut
+										localVersion={dat.localVersion}
+										img={dat.img}
+										name={dat.name}
+										routinehubID={dat.id}
+										categorize={category =>
+											this.categorize(dat, category)
+										}
+										key={dat.uniqueid}
+									/>
+								))}
+							</div>
+						);
 					}
-				/>
-				<Shortcut
-					img={cfu}
-					name={"Check For Updates"}
-					localVersion={"3.0"}
-					downloadURL={"https://routinehub.co/download/7537"}
-					routinehubID={793}
-					categorize={(category: ShortcutCategory) =>
-						this.categorize(category)
-					}
-				/>
-				<h1>Up To Date</h1>
-				<Shortcut
-					img={icontrivia}
-					name={"Trivia"}
-					localVersion={"1.2.2"}
-					downloadURL={"https://routinehub.co/download/7537"}
-					routinehubID={1001}
-					categorize={(category: ShortcutCategory) =>
-						this.categorize(category)
-					}
-				/>
-				<Shortcut
-					img={icontest}
-					name={"Secret Shortcut"}
-					localVersion={"1.2.2"}
-					downloadURL={"https://routinehub.co/download/7537"}
-					routinehubID={816}
-					categorize={(category: ShortcutCategory) =>
-						this.categorize(category)
-					}
-				/>
+					return null;
+				})}
 			</div>
 		);
 	}
