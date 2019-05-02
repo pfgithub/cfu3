@@ -1,4 +1,4 @@
 // todo
 // open url with data in query parameters
-// send very low quality images (8x8?) in base64 and have the site get the latest high quality ones from icloud
+// send very low quality images (8x8) in base64 and have the site get the latest high quality ones from icloud
 // * icloud images can only go in a src, they have a permission error if you try to copy them to a canvas

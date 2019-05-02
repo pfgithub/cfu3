@@ -132,6 +132,7 @@ async function downloadDataFake(
 			};
 	}
 }
+downloadDataFake(123231243, () => {});
 
 function downloadData(
 	id: number,
@@ -152,7 +153,7 @@ function downloadData(
 			resolve({
 				result: "error",
 				message:
-					"An error occured. This may be because you do not have internet access, or because the RoutineHub servers were unreachable, or because Harley Hicks has not yet enabled CORS."
+					"An error occured. This may be because you do not have internet access, or because the RoutineHub servers were unreachable, or because Harley Hicks has not enabled CORS."
 			});
 		};
 		xhttp.onreadystatechange = () => {
@@ -205,12 +206,20 @@ function imgDataToColorCode(imgData: Uint8ClampedArray): string {
 	return `rgba(${imgData[0]},${imgData[1]},${imgData[2]},${imgData[3]})`;
 }
 
+type ShortcutCategory =
+	| "NeedUpdating"
+	| "UpToDate"
+	| "NeedRollback"
+	| "Loading"
+	| "Error";
+
 type ShortcutProps = {
 	img: string;
 	name: string;
 	downloadURL: string;
 	routinehubID: number;
 	localVersion: string;
+	categorize: (category: ShortcutCategory) => void;
 };
 class Shortcut extends Component<
 	ShortcutProps,
@@ -239,9 +248,13 @@ class Shortcut extends Component<
 		this.downloadData();
 	}
 	findColor() {
+		const imgwidth = 8;
+		const imgheight = 8;
+		const imginsetlook = 1;
+
 		const canvas = document.createElement("canvas");
-		canvas.width = 30;
-		canvas.height = 30;
+		canvas.width = imgwidth;
+		canvas.height = imgheight;
 		const context = canvas.getContext("2d");
 		if (!context) {
 			return;
@@ -250,13 +263,18 @@ class Shortcut extends Component<
 		const base_image = new Image();
 		base_image.src = this.props.img;
 		base_image.onload = () => {
-			context.drawImage(base_image, 0, 0, 30, 30);
+			context.drawImage(base_image, 0, 0, imgwidth, imgheight);
 			this.setState({
 				gradientStartColor: imgDataToColorCode(
-					context.getImageData(4, 4, 1, 1).data
+					context.getImageData(imginsetlook, imginsetlook, 1, 1).data
 				),
 				gradientEndColor: imgDataToColorCode(
-					context.getImageData(26, 26, 1, 1).data
+					context.getImageData(
+						imgwidth - imginsetlook,
+						imgheight - imginsetlook,
+						1,
+						1
+					).data
 				)
 			});
 		};
@@ -353,7 +371,7 @@ class Shortcut extends Component<
 						onClick={e => e.stopPropagation()}
 					>
 						<div />
-						<div>Loading...</div>
+						<div className="progresstext">Loading...</div>
 						<div
 							className={`progress ${
 								this.state.percentComplete === 1 ? "loaded" : ""
@@ -378,6 +396,7 @@ class Shortcut extends Component<
 }
 
 class App extends Component<{}, {}> {
+	categorize(category: ShortcutCategory) {}
 	render() {
 		return (
 			<div className="content">
@@ -389,6 +408,9 @@ class App extends Component<{}, {}> {
 					localVersion={"1.2.2"}
 					downloadURL={"https://routinehub.co/download/7560"}
 					routinehubID={2277}
+					categorize={(category: ShortcutCategory) =>
+						this.categorize(category)
+					}
 				/>
 				<Shortcut
 					img={cfu}
@@ -396,6 +418,9 @@ class App extends Component<{}, {}> {
 					localVersion={"3.0"}
 					downloadURL={"https://routinehub.co/download/7537"}
 					routinehubID={793}
+					categorize={(category: ShortcutCategory) =>
+						this.categorize(category)
+					}
 				/>
 				<h1>Up To Date</h1>
 				<Shortcut
@@ -404,6 +429,9 @@ class App extends Component<{}, {}> {
 					localVersion={"1.2.2"}
 					downloadURL={"https://routinehub.co/download/7537"}
 					routinehubID={1001}
+					categorize={(category: ShortcutCategory) =>
+						this.categorize(category)
+					}
 				/>
 				<Shortcut
 					img={icontest}
@@ -411,6 +439,9 @@ class App extends Component<{}, {}> {
 					localVersion={"1.2.2"}
 					downloadURL={"https://routinehub.co/download/7537"}
 					routinehubID={816}
+					categorize={(category: ShortcutCategory) =>
+						this.categorize(category)
+					}
 				/>
 			</div>
 		);
