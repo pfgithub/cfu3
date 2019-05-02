@@ -72,13 +72,11 @@ type RoutineHubShortcutData =
 	  }
 	| { result: "error"; message: string };
 
-const timeout = (ms: number) => new Promise(res => setTimeout(res, ms));
-
 function downloadData(
 	id: number,
 	onProgress: (percent: number) => void
 ): Promise<RoutineHubShortcutData> {
-	return new Promise((resolve, reject) => {
+	return new Promise(resolve => {
 		const xhttp = new XMLHttpRequest();
 		xhttp.onprogress = e => {
 			console.log("onprogress", e);
