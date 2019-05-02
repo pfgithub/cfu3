@@ -47,6 +47,14 @@ body {
 .button > .text {
 	padding: 0;
 }
+.button.error {
+	background: none;
+	box-shadow: none;
+	pointer-events: none;
+}
+.button.error > .text {
+	color: #f00;
+}
 .content {
 	grid-column-start: 2;
 }

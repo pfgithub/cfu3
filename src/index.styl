@@ -55,6 +55,12 @@ lightshadow()
 	lightshadow();
 	& > .text
 		padding 0
+	&.error
+		background none
+		box-shadow none
+		pointer-events none
+		& > .text
+			color: #f00;
 
 .content
 	grid-column-start 2

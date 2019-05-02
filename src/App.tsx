@@ -277,7 +277,10 @@ class Shortcut extends Component<
 					<div className="buttons">
 						<div className="blank" />
 						<a
-							className="button getversion"
+							className={
+								"button getversion " +
+								(this.state.error ? "error" : "")
+							}
 							href={
 								this.state.downloadURL ||
 								`javascript:alert("Error")`
