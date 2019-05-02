@@ -146,6 +146,12 @@ function imgDataToColorCode(imgData: Uint8ClampedArray): string {
 	return `rgba(${imgData[0]},${imgData[1]},${imgData[2]},${imgData[3]})`;
 }
 
+let updateArrows: { [key in UpdateStatus]: string } = {
+	UpdateAvailable: "→",
+	RollbackAvailable: "↘",
+	NoChanges: "="
+};
+
 type ShortcutCategory =
 	| "NeedUpdating"
 	| "UpToDate"
@@ -292,12 +298,17 @@ class Shortcut extends Component<
 							<div className="text">
 								{this.state.error
 									? "Error"
-									: `${
+									: this.state.updateStatus
+									? `${
 											this.state.open
 												? this.props.localVersion
 												: ""
-									  } → ${this.state.publishedVersion ||
-											"..."}`}
+									  } ${
+											updateArrows[
+												this.state.updateStatus
+											]
+									  } ${this.state.publishedVersion || "..."}`
+									: `???`}
 							</div>
 						</a>
 						<div className="blank" />
@@ -325,11 +336,11 @@ class Shortcut extends Component<
 								) * 100}%`
 							}}
 							role="progressbar"
-							aria-valueNow={
+							aria-valuenow={
 								+this.state.percentComplete.toFixed(2) * 100
 							}
-							aria-valueMin={0}
-							aria-valueMax={100}
+							aria-valuemin={0}
+							aria-valuemax={100}
 						/>
 					</div>
 				) : null}
@@ -338,7 +349,65 @@ class Shortcut extends Component<
 	}
 }
 
-class App extends Component<{}, {}> {
+type ShortcutDataBase = {
+	img: string;
+	name: string;
+	localVersion: string;
+	category: ShortcutCategory;
+	uniqueid: string;
+};
+
+interface ShortcutDataRoutineHub extends ShortcutDataBase {
+	service: "RoutineHub";
+	id: number;
+}
+
+type ShortcutData = ShortcutDataRoutineHub;
+
+class App extends Component<{}, { data: ShortcutData[] }> {
+	constructor(props: Readonly<{}>) {
+		super(props);
+		this.state = {
+			data: [
+				{
+					name: "ALL THE GIFs!",
+					uniqueid: "ALL THE GIFs!",
+					category: "Loading",
+					img: img,
+					localVersion: "9.2",
+					service: "RoutineHub",
+					id: 2277
+				},
+				{
+					name: "Check For Updates",
+					uniqueid: "Check For Updates",
+					category: "Loading",
+					img: cfu,
+					localVersion: "3.0",
+					service: "RoutineHub",
+					id: 793
+				},
+				{
+					name: "Trivia",
+					uniqueid: "Trivia",
+					category: "Loading",
+					img: icontrivia,
+					localVersion: "1.2.2",
+					service: "RoutineHub",
+					id: 1001
+				},
+				{
+					name: "Unpublished Shortcut",
+					uniqueid: "UnpublishedShortcut",
+					category: "Loading",
+					img: icontest,
+					localVersion: "0",
+					service: "RoutineHub",
+					id: 816
+				}
+			]
+		};
+	}
 	categorize(category: ShortcutCategory) {}
 	render() {
 		return (
@@ -348,7 +417,7 @@ class App extends Component<{}, {}> {
 				<Shortcut
 					img={img}
 					name={"ALL THE GIFs!"}
-					localVersion={"1.2.2"}
+					localVersion={"1.1.2"}
 					downloadURL={"https://routinehub.co/download/7560"}
 					routinehubID={2277}
 					categorize={(category: ShortcutCategory) =>
