@@ -72,6 +72,34 @@ type RoutineHubShortcutData =
 	  }
 	| { result: "error"; message: string };
 
+type iCloudShortcutData =
+	| {
+			result: true;
+			name: string;
+			icon: string;
+			downloadURL: string;
+	  }
+	| { result: false };
+
+function downloadiCloud(id: string): Promise<iCloudShortcutData> {
+	return new Promise((resolve, reject) => {
+		const request = new XMLHttpRequest();
+		request.open(
+			"GET",
+			`https://shortcutsweb.app/inspectshortcut?id=${encodeURIComponent(
+				id
+			)}&info=basic`
+		);
+		request.responseType = "json";
+		request.onload = e => {
+			resolve(request.response as iCloudShortcutData);
+		};
+		request.onerror = e => resolve({ result: false });
+		request.onabort = e => resolve({ result: false });
+		request.send();
+	});
+}
+
 function downloadData(
 	id: number,
 	onProgress: (percent: number) => void
@@ -87,21 +115,25 @@ function downloadData(
 			}
 		};
 		xhttp.onerror = e => {
-			console.log(e);
 			resolve({
 				result: "error",
 				message:
 					"An error occured. This may be because you do not have internet access, or because the RoutineHub servers were unreachable, or because Harley Hicks has not enabled CORS."
 			});
 		};
-		xhttp.onreadystatechange = () => {
-			if (xhttp.readyState === 4) {
-				onProgress(1);
-				// Typical action to be performed when the document is ready:
-				console.log("response:", xhttp);
-				if (xhttp.response) {
-					resolve(JSON.parse(xhttp.response));
-				}
+		xhttp.onabort = e => {
+			resolve({
+				result: "error",
+				message:
+					"An error occured. This may be because you do not have internet access, or because the RoutineHub servers were unreachable, or because Harley Hicks has not enabled CORS."
+			});
+		};
+		xhttp.onload = () => {
+			onProgress(1);
+			// Typical action to be performed when the document is ready:
+			console.log("response:", xhttp);
+			if (xhttp.response) {
+				resolve(JSON.parse(xhttp.response));
 			}
 		};
 		xhttp.open(
@@ -144,7 +176,7 @@ function imgDataToColorCode(imgData: Uint8ClampedArray): string {
 	return `rgba(${imgData[0]},${imgData[1]},${imgData[2]},${imgData[3]})`;
 }
 
-let updateArrows: { [key in UpdateStatus]: string } = {
+const updateArrows: { [key in UpdateStatus]: string } = {
 	UpdateAvailable: "→",
 	RollbackAvailable: "↘",
 	NoChanges: "="
@@ -157,13 +189,13 @@ type ShortcutCategory =
 	| "Loading"
 	| "Error";
 
-let compareResultToCategory: { [key in UpdateStatus]: ShortcutCategory } = {
+const compareResultToCategory: { [key in UpdateStatus]: ShortcutCategory } = {
 	NoChanges: "UpToDate",
 	RollbackAvailable: "NeedRollback",
 	UpdateAvailable: "NeedUpdating"
 };
 
-let categoryNames: { [key in ShortcutCategory]: string } = {
+const categoryNames: { [key in ShortcutCategory]: string } = {
 	NeedUpdating: "Update Available",
 	UpToDate: "Up To Date",
 	NeedRollback: "Rollback Required",
@@ -191,6 +223,7 @@ class Shortcut extends Component<
 		percentComplete: number;
 		error: boolean;
 		loading: boolean;
+		highQualityImage?: string;
 	}
 > {
 	constructor(props: Readonly<ShortcutProps>) {
@@ -258,7 +291,7 @@ class Shortcut extends Component<
 			);
 			return;
 		}
-		let compareResult = semverCompare(
+		const compareResult = semverCompare(
 			this.props.localVersion,
 			rhdata.Version
 		);
@@ -274,6 +307,15 @@ class Shortcut extends Component<
 				this.props.categorize(compareResultToCategory[compareResult]);
 			}
 		);
+		const shortcutID = rhdata.URL.match(/[a-z0-9]{32}/); // https://shortcutsweb.app/inspectshortcut?id=7ef9edeb4d5b47d597d9a7e76534c8bc&info=basic
+		if (!shortcutID) {
+			return;
+		}
+		const icloudData = await downloadiCloud(shortcutID[0]);
+		if (!icloudData.result) {
+			return;
+		}
+		this.setState({ highQualityImage: icloudData.icon });
 	}
 	render() {
 		return (
@@ -291,7 +333,7 @@ class Shortcut extends Component<
 				<div className="short">
 					<img
 						className="icon"
-						src={this.props.img}
+						src={this.state.highQualityImage || this.props.img}
 						alt={this.props.name}
 					/>
 					<div className={`details ${this.state.open ? "open" : ""}`}>
@@ -308,10 +350,9 @@ class Shortcut extends Component<
 					<div className="buttons">
 						<div className="blank" />
 						<a
-							className={
-								"button getversion " +
-								(this.state.error ? "error" : "")
-							}
+							className={`button getversion ${
+								this.state.error ? "error" : ""
+							}`}
 							href={
 								this.state.downloadURL ||
 								`javascript:alert("Error")`
@@ -459,7 +500,7 @@ class App extends Component<{}, { data: ShortcutData[] }> {
 		return (
 			<div className="content">
 				{categoryOrder.map(category => {
-					let scbc = shortcutsByCategory[category];
+					const scbc = shortcutsByCategory[category];
 					if (scbc) {
 						return (
 							<div key={category}>
