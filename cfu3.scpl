@@ -2,3 +2,117 @@
 // open url with data in query parameters
 // send very low quality images (8x8) in base64 and have the site get the latest high quality ones from icloud
 // * icloud images can only go in a src, they have a permission error if you try to copy them to a canvas
+
+Text "Check for Updates" -> mv:ThisShortcut
+
+Comment
+| Check for Updates 3.0 by
+| pfg#4856
+| https://routinehub.co/user/pfg
+| /u/pfg___
+
+CreateFolder path="/CFU/"
+
+
+ChooseFromMenu "CFU 3.0"
+| Check for Updates
+| Add unsupported shortcut
+
+Case CheckForUpdates
+
+Case AddUnsupported
+
+    ExitShortcut
+
+End
+
+
+GetMyShortcuts -> mv:MyShortcuts
+
+// CFU 2.0
+GetFile "iCloud Drive" false "/CFU/" false
+RepeatWithEach
+
+    GetVariable v:"Repeat Item" -> v:ShortcutData
+    
+    If ^(count ^v:ShortcutData.name Items) Equals 0
+        v:ShortcutData.Name
+    Else
+        v:ShortcutData.name
+    End -> mv:name
+    
+    Count Items
+    If Equals 0
+    
+        text ""
+        
+    Otherwise
+    
+        GetVariable mv:MyShortcuts
+        FilterFiles :filter{name is mv:name}
+        GetImagesFromInput
+        ResizeImage width=8 height=8
+        Base64Encode -> mv:Base64Encoded
+        
+        GetVariable v:ShortcutData
+        SetDictionaryValue "icon" mv:Base64Encoded
+        SetVariable v:ShortcutData
+    
+    End
+    
+    GetVariable v:ShortcutData
+
+End -> mv:CFU2Data
+
+// CFU 1.0
+GetFile "iCloud Drive" false "/AutoUpdateData.json" false -> mv:CFU1Data
+GetDictionaryValue "All Keys"
+RepeatWithEach
+    
+    GetVariable v:"Repeat Item" -> v:ShortcutID
+    GetVariable mv:CFU1Data
+    GetDictionaryValue Value v:ShortcutID -> v:ShortcutData
+    
+    Count Items
+    If Equals 0
+    
+        text ""
+        
+    Otherwise
+    
+        GetVariable mv:MyShortcuts
+        FilterFiles :filter{name is mv:name}
+        GetImagesFromInput
+        ResizeImage width=8 height=8
+        Base64Encode -> mv:Base64Encoded
+        
+        GetVariable v:ShortcutData
+        SetDictionaryValue "icon" mv:Base64Encoded
+        SetVariable v:ShortcutData
+    
+    End
+    
+    GetVariable v:ShortcutData
+    SetDictionaryValue uniqueid v:ShortcutID
+    
+End -> mv:CFU1Data
+// TODO: Split into parts and get contents of webpage on cfu.scpl.dev/?part= which will localstorage it
+Text "https://cfu.scpl.dev/?this=\(URLEncode ^mv:ThisShortcut)&c2=\(URLEncode ^mv:CFU2Data)&c1=\(URLEncode ^mv:CFU1Data)" -> mv:URL
+Count Characters -> mv:Chars
+ShowResult "\(mv:URL) \(mv:Chars)"
+
+
+/*
+
+data: 
+
+
+
+
+old:
+	{id: number, name: string, version: string, icon: string}[]
+new:
+		{tolowercase}
+		{uniqueid: string, name: string, version: string, service: string, id: string, icon: string}
+	
+*/
